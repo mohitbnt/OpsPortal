@@ -87,7 +87,7 @@ jobs:
             --parameters '{
               "commands": [
                 "set -e",
-                "mkdir /opt/opsportal",
+                "mkdir -p /opt/opsportal",
                 "cd /opt/opsportal",
                 "git pull origin main",
                 "cd compose",
