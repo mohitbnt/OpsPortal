@@ -99,7 +99,7 @@ jobs:
             '{
               commands: [
                 "set -e",
-                "mkdir -p /opt/opsportal"
+                "mkdir -p /opt/opsportal",
                 "cd /opt/opsportal",
                 "git pull origin main",
                 "cd compose",
