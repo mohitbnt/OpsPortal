@@ -66,6 +66,9 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: build
+    permissions: 
+      contents: read
+      id-token: write
     if: github.event_name == 'push'
     steps:
       - name: Configure AWS Credentials for OIDC
