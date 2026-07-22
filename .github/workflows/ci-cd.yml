@@ -71,14 +71,6 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - name: Debug OIDC token claims
-        run: |
-          IDTOKEN=$(curl -sSL -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sts.amazonaws.com" | jq -r .value)
-          echo "$IDTOKEN" | cut -d '.' -f2 | base64 -d 2>/dev/null | jq '{sub, aud, repository, ref, event_name, environment}'
-        env:
-          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ${{ env.ACTIONS_ID_TOKEN_REQUEST_TOKEN }}
-          ACTIONS_ID_TOKEN_REQUEST_URL: ${{ env.ACTIONS_ID_TOKEN_REQUEST_URL }}
       - name: Configure AWS Credentials for OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -107,6 +99,7 @@ jobs:
             '{
               commands: [
                 "set -e",
+                "mkdir -p /opt/opsportal"
                 "cd /opt/opsportal",
                 "git pull origin main",
                 "cd compose",
