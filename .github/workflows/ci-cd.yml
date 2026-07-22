@@ -87,13 +87,13 @@ jobs:
             --parameters '{
               "commands": [
                 "set -e",
-                "mkdir -p ~/OpsPosrtal",
-                "cd ~/OpsPosrtal",
-                "if [ ! -d ".git" ]; then
-                    git clone https://github.com/mohitbnt/OpsPortal.git .
-                 else
-                    git pull origin main
-                fi",
+                "mkdir -p ~/OpsPortal",
+                "cd ~/OpsPortal",
+                "if [ ! -d ".git" ]; then",
+                    "git clone https://github.com/mohitbnt/OpsPortal.git .",
+                 "else",
+                    "git pull origin main",
+                "fi",
                 "cd compose",
                 "cp .env.example .env",
                 "cp backend.env.example backend.env",
