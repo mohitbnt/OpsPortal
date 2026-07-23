@@ -5,6 +5,8 @@ networks:
     backend-net:
         name: ${ENVIRONMENT_NAME}_opsportal-backend-net
         driver: bridge
+    monitoring-net:
+        name: opsportal-monitoring-net
 
 volumes:
   postgres-data:
@@ -13,12 +15,23 @@ volumes:
   redis-data:
     name: ${ENVIRONMENT_NAME}_opsportal-redis-data
 
+  prometheus-data:
+    name: opsportal-prometheus-data
+
+  grafana-data:
+    name: opsportal-grafana-data     
+
 services:
       postgres:
         container_name: ${ENVIRONMENT_NAME}_opsportal_postgres
         image: postgres:16
         hostname: ${ENVIRONMENT_NAME}_opsportal_postgres
         restart: unless-stopped
+        logging:
+          driver: json-file
+          options:
+            max-size: "10m"
+            max-file: "5"
         env_file:
           - ./postgres.env
         volumes:
@@ -43,6 +56,11 @@ services:
           - redis-server
           - /usr/local/etc/redis/redis.conf
         restart: unless-stopped
+        logging:
+          driver: json-file
+          options:
+            max-size: "10m"
+            max-file: "5"
         volumes:
           - redis-data:/data
           - ../redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
@@ -62,6 +80,11 @@ services:
             IMAGE_VERSION: ${IMAGE_VERSION}
         image: ${DOCKERHUB_USERNAME}/opsportal-backend:${IMAGE_VERSION}
         restart: unless-stopped
+        logging:
+          driver: json-file
+          options:
+            max-size: "10m"
+            max-file: "5"
         env_file:
           - ./backend.env
         depends_on:
@@ -80,6 +103,11 @@ services:
             IMAGE_VERSION: ${IMAGE_VERSION}
         image: ${DOCKERHUB_USERNAME}/opsportal-frontend:${IMAGE_VERSION}
         restart: unless-stopped
+        logging:
+          driver: json-file
+          options:
+            max-size: "10m"
+            max-file: "5"
         ports:
           - "80:80"
         env_file:
@@ -90,3 +118,79 @@ services:
         networks:
           - frontend-net
           - backend-net    
+
+      node-exporter:
+        image: prom/node-exporter:v1.9.1
+        container_name: node-exporter
+        restart: unless-stopped
+        command:
+          - "--path.rootfs=/host"
+        pid: host
+        volumes:
+          - "/:/host:ro,rslave"
+        networks:
+          - monitoring-net
+        logging:
+          driver: json-file
+          options:
+            max-size: "10m"
+            max-file: "5"
+
+      cadvisor:
+        image: gcr.io/cadvisor/cadvisor:latest-ghcr
+        container_name: cadvisor
+        restart: unless-stopped
+        volumes:
+          - /:/rootfs:ro
+          - /var/run:/var/run:ro
+          - /var/run/docker.sock:/var/run/docker.sock:ro
+          - /sys:/sys:ro
+          - /var/lib/docker:/var/lib/docker:ro
+          - /dev/disk:/dev/disk:ro
+        networks:
+          - monitoring-net
+        logging:
+          driver: json-file
+          options:
+            max-size: "10m"
+            max-file: "5"
+
+      prometheus:
+        image: prom/prometheus:v3.5.0
+        container_name: prometheus
+        restart: unless-stopped
+        command:
+          - "--config.file=/etc/prometheus/prometheus.yml"
+        volumes:
+          - ../monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+          - prometheus-data:/prometheus
+        networks:
+          - monitoring-net
+        logging:
+          driver: json-file
+          options:
+            max-size: "10m"
+            max-file: "5"
+
+      grafana:
+        image: grafana/grafana:12.1.1
+        container_name: grafana
+        restart: unless-stopped
+        depends_on:
+          - prometheus
+        ports:
+          - 3000:3000
+        environment:
+          GF_SECURITY_ADMIN_USER: admin
+          GF_SECURITY_ADMIN_PASSWORD: admin
+        volumes:
+          - grafana-data:/var/lib/grafana
+          - ../monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+          - ../monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+        networks:
+          - monitoring-net
+        logging:
+          driver: json-file
+          options:
+            max-size: "10m"
+            max-file: "5"

@@ -41,7 +41,7 @@ RUN rm -rf /usr/share/nginx/html/*
 COPY --from=builder /app/dist/ /usr/share/nginx/html/
 
 # Copy Nginx configuration
-COPY nginx/opsportal.conf.template /etc/nginx/templates/default.conf.template
+COPY nginx-conf/opsportal.conf.template /etc/nginx/templates/default.conf.template
 
 EXPOSE 80
 
