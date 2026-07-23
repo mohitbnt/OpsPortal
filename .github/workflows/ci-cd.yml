@@ -65,7 +65,7 @@ jobs:
         run: docker compose build
 
       - name: Scan Backend Image
-        uses: aquasecurity/trivy-action@v0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-ref: "${{ secrets.DOCKERHUB_USERNAME }}/opsportal-backend:${{ github.sha }}"
           format: sarif
@@ -75,7 +75,7 @@ jobs:
           exit-code: 0
 
       - name: Scan Frontend Image
-        uses: aquasecurity/trivy-action@v0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
             scan-ref: "${{ secrets.DOCKERHUB_USERNAME }}/opsportal-frontend:${{ github.sha }}"
             format: sarif
